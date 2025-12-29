@@ -5,7 +5,7 @@ A from-scratch implementation of the Conflict-Driven Clause Learning (CDCL) algo
 
 
 ## Goals
-- [ ] CNF Parsing
+- [x] Parsing DIMACS format
 - [ ] Implement CDCL solver
 - [ ] Try adding classical heuristics (like VSIDS) and other ML-based branching heuristics
 - [ ] Evaluate performance
