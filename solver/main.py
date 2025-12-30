@@ -2,7 +2,7 @@ from .cnf import CNFFormula, Clause
 from .dimacs_parser import DIMACS_Parser, DIMACSParseError
 
 def main():
-    filename = 'tests/dimacs_parsing/basic.cnf'  # Replace with your DIMACS file path
+    filename = 'tests/cnf_files/basic.cnf'
     try:
         parser = DIMACS_Parser(filename)
         cnf_formula: CNFFormula = parser.cnf
