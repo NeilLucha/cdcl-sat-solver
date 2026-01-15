@@ -8,10 +8,6 @@ class CDCL:
         self.trail: List[int] = [] # List of (literal, decision_level, antecedent_clause)
         self.decision_level = 0
         self.tried_phase: Dict[int, bool] = {}
-        self.vsids_scores: Dict[int, float] = {i: 0.0 for i in range(1, cnf.num_vars + 1)}
-        self.decay_factor: float = 0.95  # or 0.95–0.99
-
-        
         
 
     def literal_status(self, literal: int) -> Optional[bool]:
@@ -96,18 +92,13 @@ class CDCL:
 
 
     
-    def decide(self):
+    def decide(self, literal: int):
         """
-        Makes a decision assignment at a new decision level using VSIDS.
+        Makes a decision assignment at a new decision level
         """
-        unassigned_vars = [v for v in range(1, self.cnf.num_vars + 1) if v not in self.assignments]
-        if not unassigned_vars:
-            return  # Nothing to decide
-        
-        # Pick the variable with the highest VSIDS score
-        var = max(unassigned_vars, key=lambda v: self.vsids_scores[v])
-        
         self.decision_level += 1
+        # print(f"Decision level {self.decision_level}: deciding literal {literal}")
+        var = abs(literal)
         # Flip phase if we've tried True before
         value = True
         if var in self.tried_phase:
@@ -116,7 +107,6 @@ class CDCL:
         literal = var if value else -var
         check = self.assign(literal)
         assert check, "Conflict on decision assignment"
-
         
     def find_conflict(self) -> Optional[Clause]:
         '''
@@ -185,16 +175,6 @@ class CDCL:
                     break
         backjump_level = max((self.trail_level(abs(lit)) for lit in learned if self.trail_level(abs(lit)) < self.decision_level), default=0)
         return learned, backjump_level
-    
-    def bump_vsids(self, clause_literals: List[int], constant: float = 1.0):
-        for lit in clause_literals:
-            var = abs(lit)
-            self.vsids_scores[var] += constant  # or some constant increment
-
-    def decay_vsids(self):
-        for var in self.vsids_scores:
-            self.vsids_scores[var] *= self.decay_factor
-
     def solve(self) -> bool:
         """
         CDCL Solver main loop with sparse debug prints.
@@ -205,8 +185,8 @@ class CDCL:
         while True:
             iteration += 1
 
-            # Sparse debug prints (every 100 iterations)
-            if iteration % 100 == 0:
+            # Sparse debug prints (every 10000 iterations)
+            if iteration % 1000 == 0:
                 print(f"\n--- ITERATION {iteration} ---")
                 print(f"Decision Level: {self.decision_level}")
                 print(f"Assignments: {len(self.assignments)} variables assigned")
@@ -215,7 +195,7 @@ class CDCL:
 
             # --- Unit Propagation ---
             conflict = self.unit_propagate()
-
+            
             if conflict is None:
                 conflict = self.find_conflict()
 
@@ -225,14 +205,11 @@ class CDCL:
                     return False
 
                 learned_clause, backjump_level = self.analyze_conflict(conflict)
-                self.bump_vsids(learned_clause)
                 self.backjump(backjump_level)
                 self.cnf.add_clause(Clause(learned_clause))
                 continue
-
             
             if conflict is not None:
-                print('UIOASFOUASOUD')
                 if self.decision_level == 0:
                     self.cnf.satisfiable = False
                     print("Conflict at level 0 → UNSAT")
@@ -240,8 +217,6 @@ class CDCL:
                 
                 # Analyze conflict, backjump, learn clause
                 learned_clause, backjump_level = self.analyze_conflict(conflict)
-                self.bump_vsids(learned_clause)
-                self.decay_vsids()
                 print(f"Learned clause: {learned_clause}, backjump to level {backjump_level}")
 
                 if iteration % 10000 == 0:
@@ -267,13 +242,14 @@ class CDCL:
                     print("All variables assigned → SATISFIABLE!")
                     return True
                 else:
-                    # This should never happen if propagation is correct
                     raise RuntimeError(
                         "All variables assigned but formula unsatisfied — "
                         "conflict should have been detected during propagation"
                     )
 
-
             # --- Make a decision for the next unassigned variable ---
-            self.decide()
-
+            # --- Make a decision for the next unassigned variable ---
+            for var in range(1, self.cnf.num_vars + 1):
+                if var not in self.assignments:
+                    self.decide(var)
+                    break

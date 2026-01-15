@@ -1,5 +1,5 @@
 from solver.dimacs_parser import DIMACS_Parser, DIMACSParseError
-from solver.cdcl import CDCL
+from solver.cdcl_without_vsids import CDCL
 
 try:
     parser = DIMACS_Parser('tests/cnf_files/large_sat_test.cnf')

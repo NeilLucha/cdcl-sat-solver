@@ -42,7 +42,8 @@ class DIMACS_Parser:
     def sanity_check(self):
         if self.satisfiable is False:
             return
-        assert len(self.clauses) == self.num_clauses, "Number of clauses does not match the header."
+        if len(self.clauses) != self.num_clauses:
+            raise DIMACSParseError(f"Expected {self.num_clauses} clauses, but found {len(self.clauses)}.")
         for clause in self.clauses:
             assert len(clause) > 0, "Empty clause found."
 
