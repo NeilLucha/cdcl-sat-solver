@@ -20,6 +20,8 @@ class CNFFormula:
         self.satisfiable: bool = None #None = unknown, True = satisfiable, False = unsatisfiable
 
 
+    
+    
     def add_clause(self, clause: Clause):
         self.clauses.append(clause)
         
@@ -36,3 +38,6 @@ class CNFFormula:
 
     def __repr__(self):
         return f"CNF(num_vars={self.num_vars}, clauses={len(self.clauses)})"
+    
+    def __iter__(self):
+        return iter(self.clauses)

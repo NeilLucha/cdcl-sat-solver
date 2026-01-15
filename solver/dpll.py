@@ -1,9 +1,11 @@
 from .cnf import CNFFormula, Clause
 from typing import Optional
 class DPLL:
-    def __init__(self, clauses):
-        self.clauses = CNFFormula(clauses)
+    def __init__(self, formula: CNFFormula):
+        self.clauses = formula
         self.assignments = {} # Variable assignments
+        self.calls = 0
+
         
     def literal_status(self, literal) -> Optional[bool]:
         if abs(literal) in self.assignments:
@@ -39,26 +41,37 @@ class DPLL:
 
     def find_unit_literals(self):
         unit_literals = []
+
         for clause in self.clauses:
-            unassigned = None
-            satisfied = False
+            unassigned_literal = None
+            all_other_false = True
+
             for literal in clause.literals:
                 status = self.literal_status(literal)
-                if status is None:
-                    if unassigned is None:
-                        unassigned = literal
-                    else:
-                        break
-                elif status:
-                    satisfied = True
+
+                if status is True:
+                    all_other_false = False
                     break
-            if not satisfied and unassigned is not None:
-                unit_literals.append(unassigned)
+
+                if status is None:
+                    if unassigned_literal is None:
+                        unassigned_literal = literal
+                    else:
+                        all_other_false = False
+                        break
+
+            if unassigned_literal is not None and all_other_false:
+                unit_literals.append(unassigned_literal)
+
         return unit_literals
+
     
     
     def unit_propagate(self) -> bool:
+        
         unit_literals = self.find_unit_literals()
+        # print('unit literals: ', unit_literals)
+        # print('assignments: ', self.assignments)
         while unit_literals:
             for lit in unit_literals:
                 var = abs(lit)
@@ -71,28 +84,44 @@ class DPLL:
                     continue
             
             unit_literals = self.find_unit_literals()
+        # print('unit literals: ', unit_literals)
+        # print('assignments: ', self.assignments)
         return True
     
     def solve(self) -> bool:
-        valid = self.unit_propagate()
-        if not valid:
-            return False #Backtrack
-        if len(self.assignments) == self.clauses.num_vars:
-            return True #All variables assigned successfully
         
-        # Choose a variable to branch on
-        unassigned_vars = [v for v in range(1, self.clauses.num_vars + 1) if v not in self.assignments]
-        for chosen_var in unassigned_vars:
-            saved_assignments = self.assignments.copy()
-            # Try assigning True
-            self.assignments[chosen_var] = True
-            if self.solve():
-                return True
-            # Backtrack and try False
-            self.assignments = saved_assignments
-            self.assignments[chosen_var] = False
-            if self.solve():
-                return True
-            # Backtrack
-            self.assignments = saved_assignments
+        self.calls += 1
+        if self.calls % 100_000 == 0:
+            print("Calls:", self.calls)
+
+        
+        if not self.unit_propagate():
+            return False
+
+        status = self.formula_status()
+        if status is not None:
+            return status
+
+        # Choose ONE decision variable
+        for var in range(1, self.clauses.num_vars + 1):
+            if var not in self.assignments:
+                chosen_var = var
+                break
+
+        saved = self.assignments.copy()
+
+        # Try True
+        self.assignments[chosen_var] = True
+        if self.solve():
+            return True
+
+        # Backtrack, try False
+        self.assignments = saved.copy()
+        self.assignments[chosen_var] = False
+        if self.solve():
+            return True
+
+        # Backtrack
+        self.assignments = saved
         return False
+
