@@ -5,6 +5,12 @@ class DPLL:
         self.clauses = formula
         self.assignments = {} # Variable assignments
         self.calls = 0
+        self.num_decisions = 0
+        self.num_propagations = 0
+        self.num_conflicts = 0
+        self.max_depth = 0
+
+
 
         
     def literal_status(self, literal) -> Optional[bool]:
@@ -77,9 +83,11 @@ class DPLL:
                 var = abs(lit)
                 status = self.literal_status(lit)
                 if status == False:
+                    self.num_conflicts += 1
                     return False
                 elif status == None:
                     self.assignments[var] = (lit>0)
+                    self.num_propagations += 1
                 else:
                     continue
             
@@ -89,7 +97,7 @@ class DPLL:
         return True
     
     def solve(self) -> bool:
-        
+        self.max_depth = max(self.max_depth, len(self.assignments))
         self.calls += 1
         if self.calls % 100_000 == 0:
             print("Calls:", self.calls)
@@ -109,7 +117,7 @@ class DPLL:
                 break
 
         saved = self.assignments.copy()
-
+        self.num_decisions += 1
         # Try True
         self.assignments[chosen_var] = True
         if self.solve():
@@ -117,6 +125,7 @@ class DPLL:
 
         # Backtrack, try False
         self.assignments = saved.copy()
+        
         self.assignments[chosen_var] = False
         if self.solve():
             return True

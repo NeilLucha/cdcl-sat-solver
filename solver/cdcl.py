@@ -10,6 +10,12 @@ class CDCL:
         self.tried_phase: Dict[int, bool] = {}
         self.vsids_scores: Dict[int, float] = {i: 0.0 for i in range(1, cnf.num_vars + 1)}
         self.decay_factor: float = 0.95  # or 0.95–0.99
+        self.num_decisions = 0
+        self.num_conflicts = 0
+        self.num_propagations = 0
+        self.num_learned_clauses = 0
+        self.max_decision_level = 0
+
 
         
         
@@ -74,6 +80,8 @@ class CDCL:
         
         self.assignments[var] = value
         self.trail.append((literal, self.decision_level, antecedent))
+        if antecedent is not None:
+            self.num_propagations += 1
         return True
     
     def unit_propagate(self):
@@ -90,6 +98,7 @@ class CDCL:
                 if status is None:
                     # print(f"Unit propagate assigning literal {lit} from clause {clause.literals}")
                     check = self.assign(lit, clause)
+                    
                     if not check:
                         # print(f"Conflict during assignment of literal {lit}")
                         return clause
@@ -108,6 +117,8 @@ class CDCL:
         var = max(unassigned_vars, key=lambda v: self.vsids_scores[v])
         
         self.decision_level += 1
+        self.num_decisions += 1
+        self.max_decision_level = max(self.max_decision_level, self.decision_level)
         # Flip phase if we've tried True before
         value = True
         if var in self.tried_phase:
@@ -169,7 +180,7 @@ class CDCL:
         '''
         Performs conflict analysis and learns a new clause and backjump level
         '''
-        
+        self.num_conflicts += 1
         learned = conflict_clause.literals.copy()
         while True:
             level_count = sum(1 for lit in learned if self.trail_level(abs(lit)) == self.decision_level)
@@ -226,8 +237,10 @@ class CDCL:
 
                 learned_clause, backjump_level = self.analyze_conflict(conflict)
                 self.bump_vsids(learned_clause)
+                self.decay_vsids()
                 self.backjump(backjump_level)
                 self.cnf.add_clause(Clause(learned_clause))
+                self.num_learned_clauses += 1
                 continue
 
             
@@ -248,6 +261,7 @@ class CDCL:
                     print(f"Conflict detected! Learned clause: {learned_clause}, backjumping to level {backjump_level}")
                 self.backjump(backjump_level)
                 self.cnf.add_clause(Clause(learned_clause))
+                self.num_learned_clauses += 1
                 continue
 
             # --- Check if all variables are assigned ---

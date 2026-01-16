@@ -9,7 +9,8 @@ NOTE: Works fine now
 - [x] Implement a DPLL solver
 - [x] Implement CDCL solver
 - [x] Added VSIDS Heuristic
-- [ ] Evaluate performance
+- [x] Evaluate performance
+- [ ] Perform Comparative Analysis of DPLL, CDCL (with and w/o VSIDS)
 
 ## To-Do List
 - [x] Set up the Project
