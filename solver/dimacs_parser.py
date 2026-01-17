@@ -26,8 +26,11 @@ class DIMACS_Parser:
                     self.num_vars = int(info[2])
                     self.num_clauses = int(info[3])
                 else:
-                    literals = list(map(int, line.split()))
+                    literals = list(line.split())
                     for lit in literals:
+                        if lit == '%':
+                            break
+                        lit = int(lit)
                         if lit == 0:
                             if curr_clause:
                                 self.clauses.append(curr_clause)

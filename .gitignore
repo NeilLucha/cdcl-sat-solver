@@ -205,3 +205,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Test Files
+tests/cnf_files/
+
+# pkl Files
+tests/code/stats/

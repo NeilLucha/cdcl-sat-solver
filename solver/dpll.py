@@ -97,20 +97,26 @@ class DPLL:
         return True
     
     def solve(self) -> bool:
-        self.max_depth = max(self.max_depth, len(self.assignments))
+        self.max_depth = max(self.max_depth, self.calls)
         self.calls += 1
         if self.calls % 100_000 == 0:
             print("Calls:", self.calls)
 
         
         if not self.unit_propagate():
+            self.calls-=1
             return False
 
         status = self.formula_status()
-        if status is not None:
-            return status
+        if status is True:
+            self.calls -= 1
+            return True
+        elif status is False:
+            self.num_conflicts += 1
+            self.calls -= 1
+            return False
 
-        # Choose ONE decision variable
+        # Choose one decision variable
         for var in range(1, self.clauses.num_vars + 1):
             if var not in self.assignments:
                 chosen_var = var
@@ -118,9 +124,11 @@ class DPLL:
 
         saved = self.assignments.copy()
         self.num_decisions += 1
+        
         # Try True
         self.assignments[chosen_var] = True
         if self.solve():
+            self.calls -= 1
             return True
 
         # Backtrack, try False
@@ -128,9 +136,11 @@ class DPLL:
         
         self.assignments[chosen_var] = False
         if self.solve():
+            self.calls -= 1
             return True
 
         # Backtrack
         self.assignments = saved
+        self.calls -= 1
         return False
 

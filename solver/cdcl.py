@@ -217,12 +217,12 @@ class CDCL:
             iteration += 1
 
             # Sparse debug prints (every 100 iterations)
-            if iteration % 100 == 0:
-                print(f"\n--- ITERATION {iteration} ---")
-                print(f"Decision Level: {self.decision_level}")
-                print(f"Assignments: {len(self.assignments)} variables assigned")
-                print(f"Trail length: {len(self.trail)}")
-                print(f'------------------------ Number of Clauses: {len(self.cnf.clauses)} ------------------------')
+            # if iteration % 100 == 0:
+            #     print(f"\n--- ITERATION {iteration} ---")
+            #     print(f"Decision Level: {self.decision_level}")
+            #     print(f"Assignments: {len(self.assignments)} variables assigned")
+            #     print(f"Trail length: {len(self.trail)}")
+            #     print(f'------------------------ Number of Clauses: {len(self.cnf.clauses)} ------------------------')
 
             # --- Unit Propagation ---
             conflict = self.unit_propagate()
@@ -245,20 +245,19 @@ class CDCL:
 
             
             if conflict is not None:
-                print('UIOASFOUASOUD')
                 if self.decision_level == 0:
                     self.cnf.satisfiable = False
-                    print("Conflict at level 0 → UNSAT")
+                    # print("Conflict at level 0 → UNSAT")
                     return False  # Unsatisfiable
                 
                 # Analyze conflict, backjump, learn clause
                 learned_clause, backjump_level = self.analyze_conflict(conflict)
                 self.bump_vsids(learned_clause)
                 self.decay_vsids()
-                print(f"Learned clause: {learned_clause}, backjump to level {backjump_level}")
+                # print(f"Learned clause: {learned_clause}, backjump to level {backjump_level}")
 
-                if iteration % 10000 == 0:
-                    print(f"Conflict detected! Learned clause: {learned_clause}, backjumping to level {backjump_level}")
+                # if iteration % 10000 == 0:
+                #     print(f"Conflict detected! Learned clause: {learned_clause}, backjumping to level {backjump_level}")
                 self.backjump(backjump_level)
                 self.cnf.add_clause(Clause(learned_clause))
                 self.num_learned_clauses += 1
@@ -278,7 +277,7 @@ class CDCL:
 
                 if all_satisfied:
                     self.cnf.satisfiable = True
-                    print("All variables assigned → SATISFIABLE!")
+                    # print("All variables assigned → SATISFIABLE!")
                     return True
                 else:
                     # This should never happen if propagation is correct

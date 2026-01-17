@@ -22,3 +22,6 @@ NOTE: Works fine now
 - [ ] Comparative Analysis w/ and w/o VSIDS
 
 
+Test Data obtained from: https://www.cs.ubc.ca/~hoos/SATLIB/benchm.html
+
+
